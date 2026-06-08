@@ -1,0 +1,6 @@
+{
+  "name": "NutriComienzos",
+  "description": "Una plataforma interactiva para guiar y educar a padres primerizos sobre la alimentación infantil desde el embarazo hasta los 5 años.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
