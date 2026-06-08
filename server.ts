@@ -97,7 +97,7 @@ app.post("/api/nutrin/chat", async (req, res) => {
        6. ¡Siempre despídete con palabras de aliento y un abrazo virtual de Nutrín!`;
 
     const response = await client.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.0-flash",
       contents: message,
       config: {
         systemInstruction: systemInstruction,

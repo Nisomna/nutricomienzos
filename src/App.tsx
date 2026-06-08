@@ -485,6 +485,7 @@ export default function App() {
         })
       });
 
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
       const data = await response.json();
       const nutrinMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -608,27 +609,24 @@ export default function App() {
         {/* INTERNAL VIEWPORT SCREEN CONTAINER - MOBILE APP CONTENT */}
         <div className="flex-1 overflow-y-auto bg-[#FDFBF7] flex flex-col relative pb-16 scrollbar-none">
             
-            {/* BRANDING STRIP FOR ALL SCREENS EXCEPT WELCOME & ONBOARDING */}
+            {/* HEADER — estilo referencia: hamburger izquierda, lupa derecha, hoja decorativa */}
             {currentScreen !== "bienvenida" && currentScreen !== "registro" && currentScreen !== "perfil_bebe" && (
-              <div className="bg-[#FDFBF7] border-b border-stone-200/30 px-5 py-3 sticky top-0 z-30 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => {}} className="text-[#55634B] hover:text-stone-900 transition-colors">
-                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M1 1h16M1 6h16M1 11h16" />
-                    </svg>
-                  </button>
-                  <span className="font-black text-[10px] uppercase tracking-widest text-[#73982A]">
-                    {currentScreen === "inicio" ? "nutrí" : currentScreen === "nutricion" ? "guía" : currentScreen === "recetas" || currentScreen === "planificador" || currentScreen === "lista_compras" ? "cocina" : "nutri"}
-                  </span>
-                </div>
-                {/* Small indicator of baby status */}
+              <div className="bg-[#FAFAF7] px-5 pt-2 pb-1 sticky top-0 z-30 flex items-center justify-between">
+                <button onClick={() => {}} className="w-8 h-8 flex flex-col justify-center gap-[4px]">
+                  <span className="block w-5 h-[2px] bg-stone-700 rounded-full"></span>
+                  <span className="block w-4 h-[2px] bg-stone-700 rounded-full"></span>
+                  <span className="block w-5 h-[2px] bg-stone-700 rounded-full"></span>
+                </button>
                 <div 
                   onClick={() => setCurrentScreen("perfil_bebe")}
-                  className="bg-[#EDF2DF] hover:bg-[#E2EACF] transition-all px-3 py-1 rounded-full text-[9.5px] font-black text-[#5C791D] flex items-center gap-1.5 cursor-pointer shadow-[0_2px_8px_rgba(110,142,45,0.06)]"
+                  className="flex items-center gap-1.5 cursor-pointer"
                 >
                   <span className="w-1.5 h-1.5 bg-[#8BB326] rounded-full animate-pulse"></span>
-                  <span>👶 {profile.name} • {profile.ageMonths}m</span>
+                  <span className="text-[9.5px] font-bold text-[#5C791D]">👶 {profile.name} • {profile.ageMonths}m</span>
                 </div>
+                <button className="w-8 h-8 flex items-center justify-center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                </button>
               </div>
             )}
 
@@ -833,172 +831,112 @@ export default function App() {
               </div>
             )}
 
-            {/* --- SCREEN 4: INICIO MAIN DASHBOARD --- */}
+            {/* --- SCREEN 4: INICIO MAIN DASHBOARD (Rediseño estilo referencia) --- */}
             {currentScreen === "inicio" && (
-              <div className="p-4 space-y-4 bg-[#FDFBF7]">
+              <div className="bg-[#FAFAF7] min-h-full">
                 
-                {/* HERO BOX WITH OUR GORGEOUS NEW NUTRIN MASCOT ANIMATED BY VALUE STATUS */}
-                <div className="bg-white rounded-[32px] p-4 border border-stone-200/50 shadow-[0_4px_24px_rgba(0,0,0,0.01)] flex items-center gap-4 relative overflow-hidden">
-                  <div className="flex-1 z-10 text-left">
-                    <span className="text-[8px] bg-[#EDF2DF] text-[#5C791D] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-                      Mascota: Nivel {currentLevel}
-                    </span>
-                    <h4 className="text-lg font-black text-[#3C4A28] mt-1.5 leading-none">
-                      ¡Hola, {parentName}!
-                    </h4>
-                    <p className="text-[11px] text-stone-500 leading-tight mt-1.5">
-                      {profile.name} está en la etapa <b className="text-[#73982A]">{getMascotEvolution(currentLevel).stage}</b>. ¡Completa hábitos sanos para que Nutrín crezca!
-                    </p>
-                  </div>
-                  <div className="flex-none bg-[#FCF8F2] border border-stone-200/40 rounded-2xl p-1.5 flex items-center justify-center">
-                    {/* Render custom mascot SVG react state live! */}
-                    <NutrinMascot pose={mascotInfo.pose} size="w-16 h-16" />
-                  </div>
-                </div>
-
-                {/* REAL-TIME HABITS WITH PROGRESS ACCUMULATOR */}
-                <div className="bg-white rounded-[32px] p-4.5 border border-stone-200/50 shadow-[0_4px_24px_rgba(0,0,0,0.01)] space-y-3.5">
-                  <div className="flex justify-between items-center">
-                    <h5 className="text-[10.5px] font-black text-[#3C4A28] uppercase tracking-wider">
-                      Metas del día
-                    </h5>
-                    <span className="text-[9px] text-stone-400 font-bold">toca para sumar</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2.5">
-                    {/* Water Button */}
-                    <button
-                      onClick={() => setHabits({ ...habits, water: Math.min(4, habits.water + 1) })}
-                      className="p-3 border border-stone-100 bg-[#F5EFEB]/40 hover:bg-[#F2ECE4] rounded-[24px] text-center transition-all relative flex flex-col items-center justify-center"
-                    >
-                      <span className="text-xl block">🥛</span>
-                      <span className="text-[9px] font-bold text-stone-700 block mt-1">Vasos</span>
-                      <span className="text-xs font-black text-[#5C791D] block mt-0.5">
-                        {habits.water}/4
-                      </span>
-                    </button>
-
-                    {/* Veggies Button */}
-                    <button
-                      onClick={() => setHabits({ ...habits, veggies: Math.min(3, habits.veggies + 1) })}
-                      className="p-3 border border-stone-100 bg-[#EDF2DF]/50 hover:bg-[#E2EACF] rounded-[24px] text-center transition-all flex flex-col items-center justify-center"
-                    >
-                      <span className="text-xl block">🥦</span>
-                      <span className="text-[9px] font-bold text-stone-700 block mt-1">Verdura</span>
-                      <span className="text-xs font-black text-[#8BB326] block mt-0.5">
-                        {habits.veggies}/3
-                      </span>
-                    </button>
-
-                    {/* Fruits Button */}
-                    <button
-                      onClick={() => setHabits({ ...habits, fruits: Math.min(3, habits.fruits + 1) })}
-                      className="p-3 border border-stone-100 bg-[#FCF5E8]/60 hover:bg-[#F4EBDB] rounded-[24px] text-center transition-all flex flex-col items-center justify-center"
-                    >
-                      <span className="text-xl block">🍎</span>
-                      <span className="text-[9px] font-bold text-stone-700 block mt-1">Fruta</span>
-                      <span className="text-xs font-black text-amber-500 block mt-0.5">
-                        {habits.fruits}/3
-                      </span>
-                    </button>
-                  </div>
-
-                  {totalCompletedHabits > 0 && (
-                    <div className="w-full bg-stone-100 h-1.5 rounded-full overflow-hidden mt-2 relative">
-                      <div 
-                        className="h-full bg-gradient-to-r from-[#8BB326] to-[#CBD9AF] transition-all duration-500" 
-                        style={{ width: `${(totalCompletedHabits / 10) * 100}%` }}
-                      ></div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center text-[9px] text-stone-400 font-semibold pt-1">
-                    <span>{totalCompletedHabits} de 10 metas logradas</span>
-                    <button 
-                      onClick={() => setHabits({ water: 0, veggies: 0, fruits: 0 })}
-                      className="text-stone-400 hover:text-red-500 transition-colors font-bold"
-                    >
-                      reiniciar hoy ↺
-                    </button>
-                  </div>
-                </div>
-
-                {/* CHAT BUBBLE OF NUTRIN IN COGNITIVE ACCORDION OUTLINE */}
-                <div className="bg-[#FCF8F2] border border-stone-200/50 rounded-[28px] p-3 flex gap-3 items-center text-left">
-                  <div className="w-10 h-10 bg-white rounded-2xl flex-none border border-stone-100 flex items-center justify-center shadow-xs">
-                    <span className="text-xl animate-pulse">🦖</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[10.5px] font-bold text-stone-700 leading-tight">
-                      ¿Dudas sobre BLW o alérgenos?
-                    </p>
-                    <p className="text-[9.5px] text-stone-400 font-bold leading-tight mt-0.5">
-                      Escríbele directamente a Nutrín Inteligente.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setCurrentScreen("configuracion");
-                    }}
-                    className="bg-[#8BB326] hover:bg-[#73982A] text-white rounded-xl px-3 py-2 text-[9.5px] font-black transition-all"
-                  >
-                    chat 💬
-                  </button>
-                </div>
-
-                {/* CLINICAL TIMELINE HIGHLIGHT */}
-                <div className="bg-white rounded-[32px] p-4.5 border border-stone-200/50 shadow-[0_4px_24px_rgba(0,0,0,0.01)] text-left space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-500 uppercase tracking-widest">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Habilidad Recomendada:</span>
-                  </div>
-                  <p className="text-xs font-black text-[#5C791D]">
-                    {profile.stage === "6-12-meses" 
-                      ? "Introducción Segura del Gluten" 
-                      : profile.stage === "embarazo"
-                      ? "Ácido Fólico de Absorción Vegetal" 
-                      : "Movimientos coordinados de masticación y pinza"}
-                  </p>
-                  <p className="text-[11px] text-stone-500 leading-normal font-medium">
-                    Introduce el trigo y cereales de gluten gradualmente para reducir las intolerancias alimenticias en la infancia de forma pediátrica.
-                  </p>
-                  <button
-                    onClick={() => setCurrentScreen("nutricion")}
-                    className="text-[10px] text-[#8BB326] font-bold flex items-center gap-0.5 mt-1 hover:underline"
-                  >
-                    <span>Seguir leyendo guía</span>
-                    <ChevronRight className="w-3 h-3 stroke-[3]" />
-                  </button>
-                </div>
-
-                {/* ADORABLE MASCOT TIP ACCENT */}
-                <div className="bg-[#EDF2DF]/50 border border-[#EDF2DF] rounded-[28px] p-4 flex gap-3 text-left">
-                  <div className="text-xl flex-none">💡</div>
+                {/* HEADER SALUDO */}
+                <div className="px-5 pt-4 pb-3 flex items-center justify-between">
                   <div>
-                    <p className="text-[10.5px] font-bold text-stone-700">Tip de Nutrín para {profile.name}:</p>
-                    <p className="text-[10px] text-stone-500 leading-relaxed font-semibold mt-0.5">
-                      "Para que el hierro vegetal (como las espinacas o lentejas) sea absorbido de verdad, ponle gotas de limón fresco. ¡La vitamina C es maravillosa!"
-                    </p>
+                    <p className="text-[10px] text-stone-400 font-semibold">Buenos días 🌿</p>
+                    <h4 className="text-base font-black text-[#4A7C1F] leading-tight">
+                      Hola, {parentName}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-[#EDF2DF] rounded-full flex items-center justify-center">
+                      <span className="text-sm">🦖</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* ACHIEVEMENTS NATIVE BANNER */}
-                <div 
-                  onClick={() => setCurrentScreen("logros")}
-                  className="bg-[#FCF5E8]/60 hover:bg-[#F4EBDB]/80 active:scale-[0.99] border border-stone-200/30 rounded-[28px] p-4 flex gap-3 items-center justify-between cursor-pointer transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl">🏆</div>
-                    <div className="text-left">
-                      <p className="text-[11px] font-extrabold text-stone-700 leading-tight">
-                        Medallas y Logros de Nutrín
-                      </p>
-                      <p className="text-[9.5px] text-stone-400 font-bold leading-normal mt-0.5">
-                        ¡Descubre las insignias alimentarias de tu bebé!
-                      </p>
-                    </div>
+                {/* SEARCH BAR estilo referencia */}
+                <div className="px-5 pb-3">
+                  <div className="bg-[#EEF3E4] rounded-full px-4 py-2.5 flex items-center gap-2 border border-[#D8E8C0]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8BB326" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <span className="text-[11px] text-stone-400 font-medium flex-1">Buscar alimento o receta...</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-stone-400 flex-none stroke-[3]" />
+                </div>
+
+                {/* TABS ETAPA */}
+                <div className="px-5 flex gap-2 pb-3">
+                  {["Alimentos", "Recetas", "Hábitos"].map((tab, i) => (
+                    <button
+                      key={tab}
+                      onClick={() => i === 1 ? setCurrentScreen("recetas") : i === 2 ? null : null}
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${i === 0 ? "bg-[#8BB326] text-white shadow-sm" : "bg-white text-stone-400 border border-stone-200"}`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                  <div className="ml-auto flex items-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8BB326" strokeWidth="2.5" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+                  </div>
+                </div>
+
+                {/* LISTA DE ALIMENTOS estilo referencia */}
+                <div className="px-5 space-y-2">
+                  {[
+                    { emoji: "🫛", name: "Guisantes frescos", cat: "alimentos / verduras", cal: 81, color: "#E8F5D4" },
+                    { emoji: "🥚", name: "Huevo", cat: "alimentos / lácteos y huevos", cal: 72, color: "#FFF8E8" },
+                    { emoji: "🥬", name: "Espinaca Baby", cat: "alimentos / verduras", cal: 23, color: "#E8F5D4" },
+                    { emoji: "🥑", name: "Aguacate", cat: "alimentos / frutas", cal: 160, color: "#F0F9E8" },
+                    { emoji: "🍌", name: "Plátano maduro", cat: "alimentos / frutas", cal: 89, color: "#FFF9E0" },
+                  ].map((food, i) => (
+                    <div
+                      key={food.name}
+                      className="bg-white rounded-2xl px-3.5 py-3 flex items-center gap-3 border border-stone-100 shadow-[0_1px_6px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-all cursor-pointer"
+                      onClick={() => setCurrentScreen("nutricion")}
+                    >
+                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-none text-2xl" style={{ background: food.color }}>
+                        {food.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-bold text-stone-800 leading-tight">{food.name}</p>
+                        <p className="text-[9.5px] text-stone-400 font-medium leading-tight mt-0.5">{food.cat}</p>
+                        <p className="text-[9px] text-stone-400 font-medium">Calorías {food.cal}</p>
+                      </div>
+                      <Heart className={`w-4 h-4 flex-none ${i < 2 ? "fill-[#8BB326] text-[#8BB326]" : "text-stone-300"}`} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* HÁBITOS DEL DÍA — sección compacta */}
+                <div className="px-5 mt-4 mb-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10.5px] font-black text-stone-600 uppercase tracking-wider">Metas del día</p>
+                    <button onClick={() => setHabits({ water: 0, veggies: 0, fruits: 0 })} className="text-[9px] text-stone-400 font-bold">reiniciar ↺</button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { emoji: "🥛", label: "Agua", val: habits.water, max: 4, color: "#E8F0FF", action: () => setHabits({ ...habits, water: Math.min(4, habits.water + 1) }) },
+                      { emoji: "🥦", label: "Verdura", val: habits.veggies, max: 3, color: "#EDF2DF", action: () => setHabits({ ...habits, veggies: Math.min(3, habits.veggies + 1) }) },
+                      { emoji: "🍎", label: "Fruta", val: habits.fruits, max: 3, color: "#FFF0E8", action: () => setHabits({ ...habits, fruits: Math.min(3, habits.fruits + 1) }) },
+                    ].map(h => (
+                      <button key={h.label} onClick={h.action}
+                        className="rounded-2xl p-3 text-center transition-all active:scale-95 border border-stone-100"
+                        style={{ background: h.color }}
+                      >
+                        <span className="text-xl block">{h.emoji}</span>
+                        <span className="text-[9px] font-bold text-stone-600 block mt-1">{h.label}</span>
+                        <span className="text-[11px] font-black text-[#5C791D] block">{h.val}/{h.max}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* CHAT NUTRÍN */}
+                <div className="px-5 mt-3 mb-4">
+                  <div className="bg-[#8BB326] rounded-2xl p-3.5 flex items-center gap-3">
+                    <span className="text-2xl flex-none">🦖</span>
+                    <div className="flex-1">
+                      <p className="text-[11px] font-black text-white leading-tight">¿Dudas sobre {profile.name}?</p>
+                      <p className="text-[9.5px] text-green-100 font-medium leading-tight mt-0.5">Pregúntale a Nutrín IA</p>
+                    </div>
+                    <button onClick={() => setCurrentScreen("configuracion")} className="bg-white/20 hover:bg-white/30 text-white rounded-xl px-3 py-1.5 text-[9.5px] font-black transition-all">
+                      Chat →
+                    </button>
+                  </div>
                 </div>
 
               </div>
@@ -1877,8 +1815,10 @@ export default function App() {
 
                 <div 
                   onClick={() => {
-                    localStorage.clear();
-                    window.location.reload();
+                    if (window.confirm("¿Seguro que quieres borrar todos los datos? Se perderá el perfil del bebé, hábitos y configuración.")) {
+                      localStorage.clear();
+                      window.location.reload();
+                    }
                   }}
                   className="bg-red-50 border border-red-100 p-2.5 rounded-xl text-center text-red-600 font-black text-[10px] cursor-pointer hover:bg-red-100"
                 >
@@ -1889,75 +1829,32 @@ export default function App() {
 
           </div>
 
-          {/* SIMULATED NATIVE FOOTER NAVIGATION BAR */}
+          {/* BOTTOM NAVIGATION BAR — estilo referencia: fondo naranja redondeado */}
           {currentScreen !== "bienvenida" && currentScreen !== "registro" && currentScreen !== "perfil_bebe" && (
-            <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-[#FDFBF7] border-t border-stone-200/40 grid grid-cols-5 items-center justify-center text-center text-stone-500 z-35 shadow-[0_-2px_12px_rgba(40,55,30,0.02)] select-none">
+            <div className="absolute bottom-0 left-0 right-0 z-35 px-3 pb-2 select-none">
+              <div className="bg-[#F5A623] rounded-[28px] h-[58px] grid grid-cols-5 items-center px-2 shadow-[0_4px_20px_rgba(245,166,35,0.35)]">
               
-              <button 
-                onClick={() => {
-                  setInspectedRecipe(null);
-                  setCurrentScreen("inicio");
-                }}
-                className={`flex flex-col items-center justify-center h-full transition-colors ${
-                  currentScreen === "inicio" || currentScreen === "logros" ? "text-[#8BB326] font-black" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                <span className="text-xl">🏠</span>
-                <span className="text-[9px] font-bold mt-0.5">Inicio</span>
+              <button onClick={() => { setInspectedRecipe(null); setCurrentScreen("inicio"); }} className="flex flex-col items-center justify-center h-full">
+                <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${currentScreen === "inicio" || currentScreen === "logros" ? "fill-white scale-110" : "fill-white/50"}`}><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
               </button>
 
-              <button 
-                onClick={() => {
-                  setInspectedRecipe(null);
-                  setCurrentScreen("nutricion");
-                }}
-                className={`flex flex-col items-center justify-center h-full transition-colors ${
-                  currentScreen === "nutricion" ? "text-[#8BB326] font-black" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                <span className="text-xl">🥗</span>
-                <span className="text-[9px] font-bold mt-0.5">Guía</span>
+              <button onClick={() => { setInspectedRecipe(null); setCurrentScreen("nutricion"); }} className="flex flex-col items-center justify-center h-full">
+                <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${currentScreen === "nutricion" ? "fill-white scale-110" : "fill-white/50"}`}><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
               </button>
 
-              <button 
-                onClick={() => {
-                  setInspectedRecipe(null);
-                  setCurrentScreen("recetas");
-                }}
-                className={`flex flex-col items-center justify-center h-full transition-colors ${
-                  currentScreen === "recetas" || currentScreen === "planificador" || currentScreen === "lista_compras" ? "text-[#8BB326] font-black" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                <span className="text-xl">🥣</span>
-                <span className="text-[9px] font-bold mt-0.5">Cocina</span>
+              <button onClick={() => { setInspectedRecipe(null); setCurrentScreen("recetas"); }} className="flex flex-col items-center justify-center h-full">
+                <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${currentScreen === "recetas" || currentScreen === "planificador" || currentScreen === "lista_compras" ? "fill-white scale-110" : "fill-white/50"}`}><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
               </button>
 
-              <button 
-                onClick={() => {
-                  setInspectedRecipe(null);
-                  setCurrentScreen("configuracion");
-                }}
-                className={`flex flex-col items-center justify-center h-full transition-colors ${
-                  currentScreen === "configuracion" ? "text-[#8BB326] font-black" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                <span className="text-xl">💬</span>
-                <span className="text-[9px] font-bold mt-0.5">Chat</span>
+              <button onClick={() => { setInspectedRecipe(null); setCurrentScreen("configuracion"); }} className="flex flex-col items-center justify-center h-full">
+                <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${currentScreen === "configuracion" ? "fill-white scale-110" : "fill-white/50"}`}><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
               </button>
 
-              <button 
-                onClick={() => {
-                  setInspectedRecipe(null);
-                  setCurrentScreen("comunidad");
-                }}
-                className={`flex flex-col items-center justify-center h-full transition-colors ${
-                  currentScreen === "comunidad" ? "text-[#8BB326] font-black" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                <span className="text-xl">👥</span>
-                <span className="text-[9px] font-bold mt-0.5">Común</span>
+              <button onClick={() => { setInspectedRecipe(null); setCurrentScreen("comunidad"); }} className="flex flex-col items-center justify-center h-full">
+                <svg viewBox="0 0 24 24" className={`w-5 h-5 transition-all ${currentScreen === "comunidad" ? "fill-white scale-110" : "fill-white/50"}`}><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
               </button>
 
+            </div>
             </div>
           )}
 
