@@ -332,6 +332,19 @@ export default function App() {
     localStorage.setItem("nutricomienzos_parentName", parentName);
   }, [parentName]);
 
+  // Mascot Inactivity Growth Simulation states (Professional Feature request)
+  const [inactiveHours, setInactiveHours] = useState<number>(() => {
+    const saved = localStorage.getItem("nutricomienzos_inactive_hours");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
+  const [activeInicioSubTab, setActiveInicioSubTab] = useState<"alimentos" | "mascota">("alimentos");
+  const [showSparklesAnim, setShowSparklesAnim] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("nutricomienzos_inactive_hours", inactiveHours.toString());
+  }, [inactiveHours]);
+
   // Habit Tracker State (Daily)
   const [habits, setHabits] = useState<HabitTracker>(() => {
     const saved = localStorage.getItem("nutricomienzos_habits");
@@ -844,8 +857,11 @@ export default function App() {
                     </h4>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-[#EDF2DF] rounded-full flex items-center justify-center">
-                      <span className="text-sm">🦖</span>
+                    <div 
+                      onClick={() => setActiveInicioSubTab("mascota")}
+                      className="w-8 h-8 bg-[#EDF2DF] rounded-full flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-all text-sm"
+                    >
+                      <span className="animate-pulse">🦖</span>
                     </div>
                   </div>
                 </div>
@@ -858,86 +874,260 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* TABS ETAPA */}
-                <div className="px-5 flex gap-2 pb-3">
-                  {["Alimentos", "Recetas", "Hábitos"].map((tab, i) => (
-                    <button
-                      key={tab}
-                      onClick={() => i === 1 ? setCurrentScreen("recetas") : i === 2 ? null : null}
-                      className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${i === 0 ? "bg-[#8BB326] text-white shadow-sm" : "bg-white text-stone-400 border border-stone-200"}`}
-                    >
-                      {tab}
-                    </button>
-                  ))}
+                {/* TABS ETAPA con el nuevo subtab de Cuidado Mascota 🦖 */}
+                <div className="px-5 flex gap-2 pb-3.5 overflow-x-auto scrollbar-none">
+                  {[
+                    { label: "🥦 Alimentos", action: () => setActiveInicioSubTab("alimentos") },
+                    { label: "🥣 Recetas", action: () => setCurrentScreen("recetas") },
+                    { label: `Mascota: ${inactiveHours === 0 ? "Bebé" : "Grande"} 🦖`, action: () => setActiveInicioSubTab("mascota") }
+                  ].map((tab) => {
+                    const isTabActive = 
+                      (tab.label.includes("Alimentos") && activeInicioSubTab === "alimentos") ||
+                      (tab.label.includes("Mascota") && activeInicioSubTab === "mascota");
+                    
+                    return (
+                      <button
+                        key={tab.label}
+                        onClick={tab.action}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all cursor-pointer whitespace-nowrap ${
+                          isTabActive 
+                            ? "bg-[#8BB326] text-white shadow-[0_4px_10px_rgba(139,179,38,0.25)] border-transparent" 
+                            : "bg-white text-stone-500 border border-stone-200/60 hover:text-stone-800"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
                   <div className="ml-auto flex items-center">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8BB326" strokeWidth="2.5" strokeLinecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
                   </div>
                 </div>
 
-                {/* LISTA DE ALIMENTOS estilo referencia */}
-                <div className="px-5 space-y-2">
-                  {[
-                    { emoji: "🫛", name: "Guisantes frescos", cat: "alimentos / verduras", cal: 81, color: "#E8F5D4" },
-                    { emoji: "🥚", name: "Huevo", cat: "alimentos / lácteos y huevos", cal: 72, color: "#FFF8E8" },
-                    { emoji: "🥬", name: "Espinaca Baby", cat: "alimentos / verduras", cal: 23, color: "#E8F5D4" },
-                    { emoji: "🥑", name: "Aguacate", cat: "alimentos / frutas", cal: 160, color: "#F0F9E8" },
-                    { emoji: "🍌", name: "Plátano maduro", cat: "alimentos / frutas", cal: 89, color: "#FFF9E0" },
-                  ].map((food, i) => (
-                    <div
-                      key={food.name}
-                      className="bg-white rounded-2xl px-3.5 py-3 flex items-center gap-3 border border-stone-100 shadow-[0_1px_6px_rgba(0,0,0,0.04)] active:scale-[0.99] transition-all cursor-pointer"
-                      onClick={() => setCurrentScreen("nutricion")}
-                    >
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-none text-2xl" style={{ background: food.color }}>
-                        {food.emoji}
+                {/* DYNAMIC SUBTAB WRAPPER ROUTER */}
+                {activeInicioSubTab === "alimentos" ? (
+                  <>
+                    {/* LISTA DE ALIMENTOS estilo referencia */}
+                    <div className="px-5 space-y-2">
+                      <div className="flex justify-between items-center pb-1">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">Alimentos de Temporada</span>
+                        <span className="text-[9px] text-[#8BB326] font-bold">ver pautas ➔</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-bold text-stone-800 leading-tight">{food.name}</p>
-                        <p className="text-[9.5px] text-stone-400 font-medium leading-tight mt-0.5">{food.cat}</p>
-                        <p className="text-[9px] text-stone-400 font-medium">Calorías {food.cal}</p>
+                      {[
+                        { emoji: "🫛", name: "Guisantes frescos", cat: "alimentos / verduras", cal: 81, color: "#E8F5D4" },
+                        { emoji: "🥚", name: "Huevo", cat: "alimentos / lácteos y huevos", cal: 72, color: "#FFF8E8" },
+                        { emoji: "🥬", name: "Espinaca Baby", cat: "alimentos / verduras", cal: 23, color: "#E8F5D4" },
+                        { emoji: "🥑", name: "Aguacate", cat: "alimentos / frutas", cal: 160, color: "#F0F9E8" },
+                        { emoji: "🍌", name: "Plátano maduro", cat: "alimentos / frutas", cal: 89, color: "#FFF9E0" },
+                      ].map((food, i) => (
+                        <div
+                          key={food.name}
+                          className="bg-white rounded-2xl px-3.5 py-3 flex items-center gap-3 border border-stone-100 shadow-[0_1px_6px_rgba(0,0,0,0.03)] hover:border-stone-200/50 active:scale-[0.99] transition-all cursor-pointer"
+                          onClick={() => setCurrentScreen("nutricion")}
+                        >
+                          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-none text-2xl" style={{ background: food.color }}>
+                            {food.emoji}
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-[12px] font-bold text-stone-800 leading-tight">{food.name}</p>
+                            <p className="text-[9.5px] text-stone-400 font-medium leading-tight mt-0.5">{food.cat}</p>
+                            <p className="text-[9px] text-stone-400 font-medium">Calorías {food.cal}</p>
+                          </div>
+                          <Heart className={`w-4 h-4 flex-none ${i < 2 ? "fill-[#8BB326] text-[#8BB326]" : "text-stone-300"}`} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* HÁBITOS DEL DÍA — sección compacta */}
+                    <div className="px-5 mt-4 mb-2 text-left">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10.5px] font-black text-stone-600 uppercase tracking-wider">Metas de {profile.name}</p>
+                        <button onClick={() => setHabits({ water: 0, veggies: 0, fruits: 0 })} className="text-[9px] text-stone-400 font-bold hover:text-red-500">reiniciar ↺</button>
                       </div>
-                      <Heart className={`w-4 h-4 flex-none ${i < 2 ? "fill-[#8BB326] text-[#8BB326]" : "text-stone-300"}`} />
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { emoji: "🥛", label: "Agua", val: habits.water, max: 4, color: "#E8F0FF", action: () => { setHabits({ ...habits, water: Math.min(4, habits.water + 1) }); setInactiveHours(prev => Math.max(0, prev - 8)); } },
+                          { emoji: "🥦", label: "Verdura", val: habits.veggies, max: 3, color: "#EDF2DF", action: () => { setHabits({ ...habits, veggies: Math.min(3, habits.veggies + 1) }); setInactiveHours(prev => Math.max(0, prev - 8)); } },
+                          { emoji: "🍎", label: "Fruta", val: habits.fruits, max: 3, color: "#FFF0E8", action: () => { setHabits({ ...habits, fruits: Math.min(3, habits.fruits + 1) }); setInactiveHours(prev => Math.max(0, prev - 8)); } },
+                        ].map(h => (
+                          <button key={h.label} onClick={h.action}
+                            className="rounded-2xl p-3 text-center transition-all active:scale-95 border border-stone-100 hover:border-stone-200"
+                            style={{ background: h.color }}
+                          >
+                            <span className="text-xl block">{h.emoji}</span>
+                            <span className="text-[9px] font-bold text-stone-600 block mt-1">{h.label}</span>
+                            <span className="text-[11px] font-black text-[#5C791D] block">{h.val}/{h.max}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
 
-                {/* HÁBITOS DEL DÍA — sección compacta */}
-                <div className="px-5 mt-4 mb-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10.5px] font-black text-stone-600 uppercase tracking-wider">Metas del día</p>
-                    <button onClick={() => setHabits({ water: 0, veggies: 0, fruits: 0 })} className="text-[9px] text-stone-400 font-bold">reiniciar ↺</button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { emoji: "🥛", label: "Agua", val: habits.water, max: 4, color: "#E8F0FF", action: () => setHabits({ ...habits, water: Math.min(4, habits.water + 1) }) },
-                      { emoji: "🥦", label: "Verdura", val: habits.veggies, max: 3, color: "#EDF2DF", action: () => setHabits({ ...habits, veggies: Math.min(3, habits.veggies + 1) }) },
-                      { emoji: "🍎", label: "Fruta", val: habits.fruits, max: 3, color: "#FFF0E8", action: () => setHabits({ ...habits, fruits: Math.min(3, habits.fruits + 1) }) },
-                    ].map(h => (
-                      <button key={h.label} onClick={h.action}
-                        className="rounded-2xl p-3 text-center transition-all active:scale-95 border border-stone-100"
-                        style={{ background: h.color }}
-                      >
-                        <span className="text-xl block">{h.emoji}</span>
-                        <span className="text-[9px] font-bold text-stone-600 block mt-1">{h.label}</span>
-                        <span className="text-[11px] font-black text-[#5C791D] block">{h.val}/{h.max}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* CHAT NUTRÍN */}
-                <div className="px-5 mt-3 mb-4">
-                  <div className="bg-[#8BB326] rounded-2xl p-3.5 flex items-center gap-3">
-                    <span className="text-2xl flex-none">🦖</span>
-                    <div className="flex-1">
-                      <p className="text-[11px] font-black text-white leading-tight">¿Dudas sobre {profile.name}?</p>
-                      <p className="text-[9.5px] text-green-100 font-medium leading-tight mt-0.5">Pregúntale a Nutrín IA</p>
+                    {/* CHAT NUTRÍN */}
+                    <div className="px-5 mt-3 mb-4">
+                      <div className="bg-[#8BB326] rounded-2xl p-3.5 flex items-center gap-3 shadow-md">
+                        <span className="text-2xl flex-none">🦖</span>
+                        <div className="flex-1 text-left">
+                          <p className="text-[11px] font-black text-white leading-tight">¿Dudas sobre {profile.name}?</p>
+                          <p className="text-[9.5px] text-green-100 font-medium leading-tight mt-0.5">Pregúntale a Nutrín IA</p>
+                        </div>
+                        <button onClick={() => setCurrentScreen("configuracion")} className="bg-white/20 hover:bg-white/30 text-white rounded-xl px-3 py-1.5 text-[9.5px] font-black transition-all cursor-pointer">
+                          Chat →
+                        </button>
+                      </div>
                     </div>
-                    <button onClick={() => setCurrentScreen("configuracion")} className="bg-white/20 hover:bg-white/30 text-white rounded-xl px-3 py-1.5 text-[9.5px] font-black transition-all">
-                      Chat →
-                    </button>
+                  </>
+                ) : (
+                  /* --- INTERACTIVE MASCOT CHAMBER (DYNAMIC METABOLISM & DECAY SIMULATOR) --- */
+                  <div className="px-5 space-y-4 animate-fade-in text-left pb-4 pb-md-0">
+                    
+                    {/* Size and Status Infobox */}
+                    <div className="bg-white border border-stone-200/50 rounded-3xl p-4 shadow-[0_4px_16px_rgba(0,0,0,0.01)] space-y-3">
+                      
+                      {/* Interactive Display Area */}
+                      <div className="h-52 w-full bg-[#FAF8F5] rounded-2xl border border-stone-100 shadow-inner flex flex-col items-center justify-end pb-3 relative overflow-hidden">
+                        
+                        {/* Decorative retro grid or environment sky lines */}
+                        <div className="absolute inset-0 opacity-40 bg-[radial-gradient(#E8E5DD_1px,transparent_1.5px)] [background-size:12px_12px] pointer-events-none" />
+                        
+                        {/* Floating stars when active or mimed */}
+                        {showSparklesAnim && (
+                          <div className="absolute inset-x-0 bottom-10 flex justify-center gap-6 animate-bounce pointer-events-none text-xl select-none z-10">
+                            <span>✨</span>
+                            <span>💖</span>
+                            <span>🌟</span>
+                          </div>
+                        )}
+                        
+                        {/* THE DYNAMIC OCTAGONAL MASCOT VECTOR SCALED BY INACTIVITY */}
+                        <div 
+                          className="transition-all duration-500 transform relative z-10"
+                          style={{ 
+                            transform: `scale(${parseFloat((1 + (inactiveHours * 0.015)).toFixed(2))})`,
+                            transformOrigin: "center bottom"
+                          }}
+                        >
+                          <NutrinMascot 
+                            pose={
+                              inactiveHours === 0 
+                                ? "greeting" 
+                                : inactiveHours <= 12 
+                                ? "shy" 
+                                : inactiveHours <= 24 
+                                ? "running" 
+                                : inactiveHours <= 48 
+                                ? "cool" 
+                                : "celebrating"
+                            } 
+                            size="w-24 h-24" 
+                          />
+                        </div>
+
+                        {/* Floating tiny active/passive status tag */}
+                        <span className="absolute top-2.5 right-2.5 text-[8.5px] font-bold py-0.5 px-2 rounded-full border bg-white shadow-xs">
+                          {inactiveHours === 0 ? "⚡ Activo y Pequeño" : "⏳ Inactivo / Creciendo"}
+                        </span>
+                      </div>
+
+                      {/* Current size indicators scale readout */}
+                      <div className="grid grid-cols-2 gap-2 text-center text-[9px] font-mono border-b border-stone-100 pb-2.5">
+                        <div className="bg-[#FAF8F5] p-2 rounded-xl text-stone-600">
+                          <span className="block text-stone-400 font-bold uppercase text-[7.5px]">Tamaño de Nutrín</span>
+                          <span className="text-xs font-black text-[#5C791D]">
+                            {(1 + (inactiveHours * 0.015)).toFixed(2)}x
+                          </span>
+                        </div>
+                        <div className="bg-[#FAF8F5] p-2 rounded-xl text-stone-600">
+                          <span className="block text-stone-400 font-bold uppercase text-[7.5px]">Inactividad</span>
+                          <span className="text-xs font-black text-amber-600">
+                            {inactiveHours} horas
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Descriptive speech quote from the pet */}
+                      <div className="relative pt-1">
+                        <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200/50">
+                          {/* Speak Bubble Notch */}
+                          <div className="absolute top-[-4px] left-10 w-2.5 h-2.5 bg-stone-50 rotate-45 border-l border-t border-stone-200/30"></div>
+                          
+                          <p className="text-[9.5px] uppercase font-black tracking-wider text-[#73982A] mb-1">
+                            {inactiveHours <= 4 
+                              ? "👶 Nutrín Pocket" 
+                              : inactiveHours <= 12 
+                              ? "🍼 Bebé Gordito" 
+                              : inactiveHours <= 24 
+                              ? "🏃 Explorador" 
+                              : inactiveHours <= 48 
+                              ? "🦖 Adolescente Rebelde" 
+                              : "🦕 ¡Coloso Gigante! 🌋"}
+                          </p>
+                          <p className="text-[10.5px] text-stone-600 font-semibold leading-relaxed italic">
+                            {inactiveHours <= 4 
+                              ? `"¡Hola, súper papás! Como entran a la app con frecuencia, metabolizo la información de inmediato y me mantengo pequeñito para jugar contigo en tu mano!"`
+                              : inactiveHours <= 12 
+                              ? `"¡Opa! He crecido un poquito. Mis mejillas están más rellenitas de aguacate rústico porque me dejas solo. ¡Sigue completando hábitos!"`
+                              : inactiveHours <= 24 
+                              ? `"¡Mírame! Mis patitas ya son más largas y mi voz está cambiando. Si no mimas mis metas nutricionales, ¡creceré muy rápido!"`
+                              : inactiveHours <= 48 
+                              ? `"¡Oye! ¿Qué ha pasado? He crecido tanto que apenas quepo en el panel. ¡No podré surfear en mi aguacate favorito si continúo creciendo!"`
+                              : `"¡RUAAAAR! ¡He crecido como un tiranosaurio colosal de 30 metros por falta de atención offline! Mímame o completa hábitos para rejuvenecerme a bebé."`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Simulator Slider / Actions */}
+                      <div className="pt-2.5 border-t border-stone-100 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] font-black uppercase text-stone-400 tracking-wider">
+                            🛠️ Simular Horas de Inactividad:
+                          </span>
+                          <span className="text-[9px] text-[#8BB326] font-bold">Modo Demo</span>
+                        </div>
+                        
+                        {/* Simulation action preset grid */}
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[
+                            { label: "⚡ 0h", val: 0, desc: "Ayer" },
+                            { label: "🕒 12h", val: 12, desc: "Medio" },
+                            { label: "📆 24h", val: 24, desc: "1 Día" },
+                            { label: "💀 72h", val: 72, desc: "3 Días" }
+                          ].map((pill) => (
+                            <button
+                              key={pill.label}
+                              onClick={() => {
+                                setInactiveHours(pill.val);
+                                if (pill.val === 0) {
+                                  setShowSparklesAnim(true);
+                                  setTimeout(() => setShowSparklesAnim(false), 2000);
+                                }
+                              }}
+                              className={`py-2 px-1 rounded-xl text-[9px] font-extrabold cursor-pointer transition-all border ${
+                                inactiveHours === pill.val
+                                  ? "bg-slate-900 text-amber-200 border-slate-900 shadow-sm font-black"
+                                  : "bg-stone-50 hover:bg-stone-100 text-stone-500 border-stone-200/50"
+                              }`}
+                            >
+                              {pill.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Interactive Reset Action */}
+                        <button
+                          onClick={() => {
+                            setInactiveHours(0);
+                            setShowSparklesAnim(true);
+                            setTimeout(() => setShowSparklesAnim(false), 2000);
+                          }}
+                          className="w-full bg-[#8BB326] hover:bg-[#73982A] text-white py-2.5 px-4 rounded-xl font-black text-[10px] mt-1 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                        >
+                          <span>💖 Mimar y Rejuvenecer a Bebé</span>
+                        </button>
+                      </div>
+
+                    </div>
                   </div>
-                </div>
+                )}
 
               </div>
             )}
